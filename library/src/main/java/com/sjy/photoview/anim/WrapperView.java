@@ -1,5 +1,6 @@
 package com.sjy.photoview.anim;
 
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -8,7 +9,7 @@ import android.widget.ImageView;
  */
 
 public class WrapperView {
-    private ImageView imageView;
+    private View imageView;
     private float mwidth;
     private float mheight;
 
@@ -38,7 +39,7 @@ public class WrapperView {
         imageView.requestLayout();
     }
 
-    public WrapperView(ImageView imageView) {
+    public WrapperView(View imageView) {
         this.imageView = imageView;
     }
 }

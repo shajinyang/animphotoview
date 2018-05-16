@@ -25,7 +25,7 @@
       在module的gradle里配置
       dependencies {
          ...
-      	 compile 'com.github.shajinyang:animphotoview:1.0.0'
+      	 compile 'com.github.shajinyang:animphotoview:1.0.1'
       }
 
 #### 布局引入

@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -37,6 +38,8 @@ import java.util.List;
 public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListener {
     //动画间隔
     private final int DURATION_TIME=300;
+    //关闭动画间隔
+    private final int DURATION_TIME_CLOSE=200;
     //是否正在动画
     private boolean isAnim=false;
     //是否关闭大图
@@ -51,8 +54,6 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
     private List<Object> images;
     //背景
     private View bg;
-    //起始view
-    private ImageView orignalView;
     //目标viewpager
     private HackyViewPager targetView;
     //指示器view
@@ -60,13 +61,17 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
 
     private List<Fragment> fragmentList=new ArrayList<>();
 
+    private ViewPagerAdapter viewPagerAdapter;
+
     //用户传入的view
     private ImageView cusView;
+
+    //切换绑定历史view记录
+    private ImageView currentView;
 
     //原始图片信息
     private  float bitmapW=0;
     private  float bitmapH=0;
-
 
     //小图view的宽高
     private float origImgW=0;
@@ -75,15 +80,17 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
     private float origImgMarginLeft=0;
     //小图view的上边距
     private float origImgMarginTop=0;
-    //大图图片的显示宽高
-    private float showimageW=0;
-    private float showimageH=0;
     //图片放大后的中心点
     private float sCenterX=0;
     private float sCenterY=0;
     //大图view的中心点
     private float lCenterX=0;
     private float lCenterY=0;
+
+    //targetView起始位移坐标
+    private float transStartX=0;
+    private float transStartY=0;
+
     //动画平移距离
     private float translationX=0;
     private float translationY=0;
@@ -99,7 +106,6 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
     public AnimPhotoView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initBg();
-        initOrignalView();
         initTargetView();
         initIndicator();
     }
@@ -111,6 +117,7 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
      */
     public AnimPhotoView fromView(ImageView fromImg){
         this.cusView=fromImg;
+        currentView=fromImg;
         return this;
     }
 
@@ -176,17 +183,16 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
      * 显示展开
      */
     public void start(){
+        transStartX=0;
+        transStartY=0;
         initViewPager();
         calculateAttr();
         layoutAllView();
         updatePostion();
         updateIndicator();
-        if(orignalView!=null){
-            orignalView.setVisibility(VISIBLE);
-            indicator.setVisibility(VISIBLE);
-            animOpen();
-            tag_open=true;
-        }
+        indicator.setVisibility(VISIBLE);
+        animOpen();
+        tag_open=true;
     }
 
 
@@ -211,11 +217,13 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
      * @param bitmapH
      */
     public void onBindChanged(ImageView fromImg,float bitmapW,float bitmapH){
+        transStartX=fromImg.getX()-currentView.getX();
+        transStartY=fromImg.getY()-currentView.getY();
         this.cusView=fromImg;
         this.bitmapW=bitmapW;
         this.bitmapH=bitmapH;
+        //重新计算动画属性
         calculateAttr();
-        updateAllView();
     }
 
 
@@ -231,34 +239,22 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
 
         //放大后，位移之后的相对屏幕的坐标
         int[] lposition=new int[2];
-        targetView.getLocationInWindow(lposition);
+        this.getLocationInWindow(lposition);
 
-        //获取大view宽高
-        final float parentW= targetView.getWidth();
-        final float parentH= targetView.getHeight();
 
-        //计算小图片view的宽高及布局位置
+        //计算动画开始时view的宽高及布局位置
         origImgW=cusView.getWidth();
-        origImgH=cusView.getHeight();
+        origImgH=origImgW/bitmapW*bitmapH;
         origImgMarginLeft=sposition[0]-lposition[0];//减去父布局的相对x轴偏移
         origImgMarginTop=sposition[1]-lposition[1];//减去父布局的相对y轴偏移
 
-        //根据图片宽高比，确定最终显示宽高
-        if(bitmapW/bitmapH>parentW/parentH){
-            showimageW=parentW;
-            showimageH=bitmapH*(parentW/bitmapW);
-        }else{
-            showimageH=parentH;
-            showimageW=bitmapW*(parentH/bitmapH);
-        }
-
         //计算位移距离
-        sCenterX= showimageW/2+sposition[0];
-        sCenterY= showimageH/2+sposition[1];
-        lCenterX=targetView.getWidth()/2;
-        lCenterY=targetView.getHeight()/2+lposition[1];
-        translationX=lCenterX-sCenterX;
-        translationY=lCenterY-sCenterY;
+        sCenterX= this.getWidth()/2+sposition[0];
+        sCenterY= this.getHeight()/2+sposition[1]-(origImgH-cusView.getHeight())/2;
+        lCenterX=this.getWidth()/2+lposition[0];
+        lCenterY=this.getHeight()/2+lposition[1];
+        translationX=lCenterX-sCenterX+transStartX;
+        translationY=lCenterY-sCenterY+transStartY;
 
 
     }
@@ -267,31 +263,13 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
      * 完成初始布局
      */
     private void layoutAllView(){
-        LayoutParams params= (LayoutParams) orignalView.getLayoutParams();
+        LayoutParams params= (LayoutParams) targetView.getLayoutParams();
         params.width= (int) origImgW;
         params.height= (int) origImgH;
-        params.setMargins((int)origImgMarginLeft,(int)origImgMarginTop,0,0);
-        orignalView.setScaleType(cusView.getScaleType());//裁切方式同用户传入的view
-        orignalView.setLayoutParams(params);
-        if(iPhotoLoader!=null){
-            iPhotoLoader.display(images.get(currentPostion),orignalView);
-        }
+        params.setMargins((int)origImgMarginLeft,(int)(origImgMarginTop-(origImgH-cusView.getHeight())/2),0,0);
+        targetView.setLayoutParams(params);
     }
 
-    /**
-     * 绑定关系改变时布局调用
-     */
-    private void updateAllView(){
-        LayoutParams params= (LayoutParams) orignalView.getLayoutParams();
-        params.width= (int) origImgW;
-        params.height= (int) origImgH;
-        params.setMargins((int)origImgMarginLeft,(int)origImgMarginTop,0,0);
-        orignalView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        orignalView.setLayoutParams(params);
-        if(iPhotoLoader!=null){
-            iPhotoLoader.display(images.get(currentPostion),orignalView);
-        }
-    }
 
 
     /**
@@ -306,25 +284,14 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
         addView(bg);
     }
 
-    /**
-     * 初始化小图
-     */
-    private void initOrignalView(){
-        orignalView=new ImageView(getContext());
-        orignalView.setVisibility(INVISIBLE);
-        addView(orignalView);
-    }
 
     /**
      * 初始化viewpager
      */
     private void initTargetView(){
-        ViewGroup.LayoutParams params=new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         targetView=new HackyViewPager(getContext());
-        targetView.setId(R.id.hack_viewer_pager_sjy);
-        targetView.setLayoutParams(params);
         targetView.setVisibility(INVISIBLE);
-
+        targetView.setId(R.id.hack_viewer_pager_sjy);
         targetView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -332,6 +299,7 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
             }
         });
         targetView.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
@@ -361,7 +329,7 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
         params.gravity=Gravity.BOTTOM;
         params.setMargins(0,0,0,25);
         indicator=new TextView(getContext());
-        indicator.setText("1/5");
+        indicator.setText("1/1");
         indicator.setTextSize(18);
         indicator.setTextColor(Color.LTGRAY);
         indicator.setGravity(Gravity.CENTER);
@@ -380,11 +348,17 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
             fragmentList.clear();
         }
         for (Object imgPath:images
-             ) {
+                ) {
             fragmentList.add(new PvFragment(this,iPhotoLoader,imgPath));
         }
+        if(viewPagerAdapter==null){
+            viewPagerAdapter=new ViewPagerAdapter(((AppCompatActivity)getContext()).getSupportFragmentManager(),fragmentList);
+            targetView.setAdapter(viewPagerAdapter);
+        }else {
+            viewPagerAdapter.setFragments(fragmentList);
+        }
         targetView.setOffscreenPageLimit(fragmentList.size());
-        targetView.setAdapter(new ViewPagerAdapter(((AppCompatActivity)getContext()).getSupportFragmentManager(),fragmentList));
+
     }
 
 
@@ -401,8 +375,8 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
      * 更新指示器
      */
     private void updateIndicator(){
-        if(indicator!=null){
-            indicator.setText((currentPostion+1)+"/5");
+        if(indicator!=null&&images!=null){
+            indicator.setText((currentPostion+1)+"/"+images.size());
         }
     }
 
@@ -412,33 +386,23 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
     private void animOpen(){
         if(isAnim)return;
         isAnim=true;
-        WrapperView wrapperView=new WrapperView(orignalView);
-        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",origImgW,showimageW);
-        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",origImgW,showimageH);
-        ObjectAnimator oa3= ObjectAnimator.ofFloat(orignalView,"translationX",0,translationX);
-        ObjectAnimator oa4= ObjectAnimator.ofFloat(orignalView,"translationY",0,translationY);
+        WrapperView wrapperView=new WrapperView(targetView);
+        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",origImgW,this.getWidth());
+        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",origImgH,this.getHeight());
+        ObjectAnimator oa3= ObjectAnimator.ofFloat(targetView,"translationX",transStartX,translationX);
+        ObjectAnimator oa4= ObjectAnimator.ofFloat(targetView,"translationY",transStartY,translationY);
         ObjectAnimator oa5= ObjectAnimator.ofFloat(bg,"alpha",0,1);
         AnimatorSet set=new AnimatorSet();
-        set.play(oa).with(oa2).with(oa3).with(oa4).with(oa5);
+        set.play(oa).with(oa2).with(oa5).with(oa3).with(oa4);
         set.addListener(new Animator.AnimatorListener() {
+
             @Override
             public void onAnimationStart(Animator animation) {
-                //处理渐变的连贯性
-                orignalView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                if(iPhotoLoader!=null){
-                    iPhotoLoader.display(images.get(currentPostion),orignalView);
-                }
+                targetView.setVisibility(VISIBLE);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                targetView.setVisibility(View.VISIBLE);
-                orignalView.setVisibility(View.INVISIBLE);
-                //处理渐变的连贯性
-                orignalView.setScaleType(cusView.getScaleType());
-                if(iPhotoLoader!=null){
-                    iPhotoLoader.display(images.get(currentPostion),orignalView);
-                }
                 isAnim=false;
             }
 
@@ -452,6 +416,7 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
 
             }
         });
+
         set.setDuration(DURATION_TIME);
         set.start();
     }
@@ -462,31 +427,25 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
     private void animClose(){
         if(isAnim)return;
         isAnim=true;
-        WrapperView wrapperView=new WrapperView(orignalView);
-        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",showimageW,origImgW);
-        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",showimageH,origImgH);
-        ObjectAnimator oa3= ObjectAnimator.ofFloat(orignalView,"translationX",translationX,0);
-        ObjectAnimator oa4= ObjectAnimator.ofFloat(orignalView,"translationY",translationY,0);
+        WrapperView wrapperView=new WrapperView(targetView);
+        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",this.getWidth(),origImgW);
+        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",this.getHeight(),origImgH);
+        ObjectAnimator oa3= ObjectAnimator.ofFloat(targetView,"translationX",translationX,transStartX);
+        ObjectAnimator oa4= ObjectAnimator.ofFloat(targetView,"translationY",translationY,transStartY);
         ObjectAnimator oa5= ObjectAnimator.ofFloat(bg,"alpha",1,0);
         AnimatorSet set=new AnimatorSet();
         set.play(oa).with(oa2).with(oa5).with(oa3).with(oa4);
         set.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                //处理渐变的连贯性
-                orignalView.setScaleType(cusView.getScaleType());
-                if(iPhotoLoader!=null){
-                    iPhotoLoader.display(images.get(currentPostion),orignalView);
-                }
-                targetView.setVisibility(View.INVISIBLE);
-                orignalView.setVisibility(View.VISIBLE);
                 indicator.setVisibility(INVISIBLE);
+                currentView=cusView;
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 isAnim=false;
-                orignalView.setVisibility(View.INVISIBLE);
+                targetView.setVisibility(INVISIBLE);
             }
 
             @Override
@@ -499,7 +458,8 @@ public class AnimPhotoView extends FrameLayout implements OnPhotoViewClickListen
 
             }
         });
-        set.setDuration(DURATION_TIME);
+        set.setDuration(DURATION_TIME_CLOSE);
+        set.setInterpolator(new AccelerateInterpolator());
         set.start();
     }
 
