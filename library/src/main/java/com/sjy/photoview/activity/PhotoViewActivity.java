@@ -92,9 +92,9 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_module_lib_pv_browers);
-        relativeLayout=findViewById(R.id.module_lib_bg);
+        relativeLayout= (RelativeLayout) findViewById(R.id.module_lib_bg);
         bg=findViewById(R.id.bg_color);
-        indicator=findViewById(R.id.indicate);
+        indicator= (TextView) findViewById(R.id.indicate);
         getIntentData();
         initListener();
 
