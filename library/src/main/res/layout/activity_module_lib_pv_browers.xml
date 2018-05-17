@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/module_lib_bg"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+    <View
+        android:id="@+id/bg_color"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000"
+        android:alpha="0"/>
+    <TextView
+        android:id="@+id/indicate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1/5"
+        android:gravity="center"
+        android:layout_alignParentBottom="true"
+        android:padding="8dp"
+        android:background="#80000000"
+        android:textColor="#fff"
+        android:textSize="18dp"/>
+</RelativeLayout>

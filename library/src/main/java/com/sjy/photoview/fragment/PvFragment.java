@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.sjy.photoview.bean.GallBean;
 import com.sjy.photoview.listener.IPhotoLoader;
 import com.sjy.photoview.listener.OnPhotoViewClickListener;
 
@@ -21,7 +22,7 @@ import com.sjy.photoview.listener.OnPhotoViewClickListener;
 public class PvFragment extends Fragment {
     private OnPhotoViewClickListener onPhotoViewClickListener;
     private IPhotoLoader iPhotoLoader;
-    private Object imgPath;
+    private GallBean bean;
     public Context mContext;
     public Boolean isFirstLoad=true;//是否是第一次加载
     public Boolean isVisible=false;//是否可见
@@ -29,10 +30,10 @@ public class PvFragment extends Fragment {
     private PhotoView photoView;
 
     @SuppressLint("ValidFragment")
-    public PvFragment(OnPhotoViewClickListener onPhotoViewClickListener,IPhotoLoader iPhotoLoader,Object imgPath) {
+    public PvFragment(OnPhotoViewClickListener onPhotoViewClickListener,IPhotoLoader iPhotoLoader,GallBean bean) {
         this.onPhotoViewClickListener = onPhotoViewClickListener;
         this.iPhotoLoader=iPhotoLoader;
-        this.imgPath=imgPath;
+        this.bean=bean;
     }
 
     public PvFragment() {
@@ -61,17 +62,6 @@ public class PvFragment extends Fragment {
         }
     }
 
-    /**
-     * 图片复位
-     */
-    public void refreshDrawableState(){
-        if(photoView!=null){
-            if(1.0f!=photoView.getScale()){
-                photoView.setScale(1.0f);
-            }
-
-        }
-    }
 
     private void loadData(){
         if(isFirstLoad&& isVisible && isPrepare){
@@ -82,21 +72,17 @@ public class PvFragment extends Fragment {
 
     private  void init(){
         if(iPhotoLoader!=null){
-            iPhotoLoader.display(imgPath,photoView);
+            iPhotoLoader.loadImg(bean,photoView);
         }
         photoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                refreshDrawableState();
                 if(onPhotoViewClickListener!=null) {
                     onPhotoViewClickListener.onClick();
                 }
             }
         });
     }
-
-
-
 
     private  void initData(){
 
