@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -29,6 +31,7 @@ import com.sjy.photoview.listener.IPhotoLoader;
 import com.sjy.photoview.listener.OnCalDataChanged;
 import com.sjy.photoview.listener.OnPageChangeListener;
 import com.sjy.photoview.listener.OnPhotoViewClickListener;
+import com.sjy.photoview.listener.OnScaleChangeListener;
 import com.sjy.photoview.view.HackyViewPager;
 
 import java.util.ArrayList;
@@ -40,50 +43,43 @@ import java.util.List;
  */
 
 public class PhotoViewActivity extends AppCompatActivity implements OnCalDataChanged {
-    private static final int DURATION_TIME=500;
-    private static final int DURATION_TIME_CLOSE=200;
+    private static final int DURATION_TIME=350;
+    private static final int DURATION_TIME_CLOSE=250;
     //是否正在动画
     private boolean isAnim=false;
-    private RelativeLayout relativeLayout;
+    private FrameLayout relativeLayout;
     private View bg;
     //图片加载
     private static IPhotoLoader iPhotoLoader;
     //切换回调
     private static OnPageChangeListener onPageChangeListener;
 
+    private ImageView.ScaleType cusViewScaleType;
     private  float overLayViewWidth;
     private  float overLayViewHeight;
     private  float overLayViewMarginLeft;
     private  float overLayViewMarginTop;
     private int position=0;
 
-    //targetView起始位移坐标
-    private float transStartX=0;
-    private float transStartY=0;
-
-    //targetView动画开始时起始位移坐标中心点
-    private float startCenterX;
-    private float startCenterY;
-
-
-    //targetView首次加载坐标中心点
-    private float currentCenterX;
-    private float currentCenterY;
-
-
+    private float overLayViewWidthClose=0;
+    private float overLayViewHeightClose=0;
+    private float overLayViewMarginLeftClose=0;
+    private float overLayViewMarginTopClose=0;
 
     //动画平移距离
     private float translationX=0;
     private float translationY=0;
 
-    //动画缩放
-    private float scaleX=0f;
-    private float scaleY=0f;
+    //关闭动画平移距离
+    private float translationCloseX=0;
+    private float translationCloseY=0;
+
 
     private ArrayList<GallBean> imgs;
     private List<Fragment> fragments;
     private HackyViewPager hackyViewPager;
     private TextView indicator;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +88,7 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_module_lib_pv_browers);
-        relativeLayout= (RelativeLayout) findViewById(R.id.module_lib_bg);
+        relativeLayout= (FrameLayout) findViewById(R.id.module_lib_bg);
         bg=findViewById(R.id.bg_color);
         indicator= (TextView) findViewById(R.id.indicate);
         getIntentData();
@@ -124,13 +120,8 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             overLayViewMarginTop=getIntent().getExtras().getFloat("overLayViewMarginTop");
             position=getIntent().getExtras().getInt("position");
             imgs= (ArrayList<GallBean>) getIntent().getExtras().getSerializable("imgs");
+            cusViewScaleType= (ImageView.ScaleType) getIntent().getExtras().getSerializable("cusViewScaleType");
             indicator.setText((position+1)+" / "+imgs.size());
-
-
-            //计算首次加载
-            currentCenterX=(overLayViewWidth+2*overLayViewMarginLeft)/2;
-            currentCenterY=(overLayViewHeight+2*overLayViewMarginTop)/2;
-
 
             relativeLayout.post(new Runnable() {
                 @Override
@@ -153,21 +144,29 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
      * 计算
      */
     private void calculateDistance(){
-        //计算缩放
-        scaleX=relativeLayout.getWidth()*1.0f/overLayViewWidth;
-        scaleY=relativeLayout.getHeight()*1.0f/overLayViewHeight;
+        //获取当前的图像尺寸
+        int bitmapW=imgs.get(position).getBitmapWidth();
+        int bitmapH=imgs.get(position).getBitmapHeight();
 
-        //计算初始中心点
-        startCenterX=(overLayViewWidth+2*overLayViewMarginLeft)/2;
-        startCenterY=(overLayViewHeight+2*overLayViewMarginTop)/2;
+        //计算覆盖物view关闭时的的宽高及布局位置
+        if(bitmapH*1.0f/bitmapW>relativeLayout.getHeight()*1.0f/relativeLayout.getWidth()){
+            overLayViewHeightClose=relativeLayout.getHeight();
+            overLayViewWidthClose=overLayViewHeightClose/bitmapH*bitmapW;
+        }else {
+            overLayViewWidthClose=relativeLayout.getWidth();
+            overLayViewHeightClose=overLayViewWidthClose/bitmapW*bitmapH;
+        }
+        overLayViewMarginLeftClose=(relativeLayout.getWidth()-overLayViewWidthClose)/2;
+        overLayViewMarginTopClose=(relativeLayout.getHeight()-overLayViewHeightClose)/2;
 
-        //计算目标返回的view与当前view的距离偏差
-        transStartX=startCenterX-currentCenterX;
-        transStartY=startCenterY-currentCenterY;
+        //展开动画移动距离
+        translationX=-overLayViewMarginLeft;
+        translationY=-overLayViewMarginTop;
 
-        //计算位移距离
-        translationX=relativeLayout.getWidth()/2-startCenterX+transStartX;
-        translationY=relativeLayout.getHeight()/2-startCenterY+transStartY;
+        //关闭动画时的移动距离
+        translationCloseX=overLayViewMarginLeft-overLayViewMarginLeftClose;
+        translationCloseY=overLayViewMarginTop-overLayViewMarginTopClose;
+
 
     }
 
@@ -178,18 +177,21 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
         fragments=new ArrayList<>();
         hackyViewPager=new HackyViewPager(this);
         hackyViewPager.setId(R.id.hack_viewer_pager_sjy);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) overLayViewWidth,(int) overLayViewHeight);
-        params.setMargins((int)overLayViewMarginLeft,(int) overLayViewMarginTop, 0, 0);//左上右下
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams((int) overLayViewWidth,(int) overLayViewHeight);
+        params.setMargins((int)overLayViewMarginLeft,(int) overLayViewMarginTop, 0, 0);
         hackyViewPager.setLayoutParams(params);
         relativeLayout.addView(hackyViewPager,relativeLayout.getChildCount()-1);
         for (GallBean bean:imgs
                 ) {
-            fragments.add(new PvFragment(new OnPhotoViewClickListener() {
+            PvFragment pvFragment=new PvFragment(new OnPhotoViewClickListener() {
                 @Override
                 public void onClick() {
+                    ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
+                    setHackyViewPagerPosition();
                     animClose();
                 }
-            }, iPhotoLoader, bean));
+            }, iPhotoLoader, bean);
+            fragments.add(pvFragment);
         }
         hackyViewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(),fragments));
         hackyViewPager.setOffscreenPageLimit(fragments.size());
@@ -218,6 +220,8 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
 
     @Override
     public void onBackPressed() {
+        ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
+        setHackyViewPagerPosition();
         animClose();
     }
 
@@ -228,17 +232,25 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
     private void animOpen(){
         if(isAnim)return;
         isAnim=true;
-        ObjectAnimator oa= ObjectAnimator.ofFloat(hackyViewPager,"scaleX",1,scaleX);
-        ObjectAnimator oa2= ObjectAnimator.ofFloat(hackyViewPager,"scaleY",1,scaleY);
-        ObjectAnimator oa3= ObjectAnimator.ofFloat(hackyViewPager,"translationX",transStartX,translationX);
-        ObjectAnimator oa4= ObjectAnimator.ofFloat(hackyViewPager,"translationY",transStartY,translationY);
+        WrapperView wrapperView=new WrapperView(hackyViewPager);
+        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",overLayViewWidth,relativeLayout.getWidth());
+        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",overLayViewHeight,relativeLayout.getHeight());
+        ObjectAnimator oa3= ObjectAnimator.ofFloat(hackyViewPager,"translationX",0,translationX);
+        ObjectAnimator oa4= ObjectAnimator.ofFloat(hackyViewPager,"translationY",0,translationY);
         ObjectAnimator oa5= ObjectAnimator.ofFloat(bg,"alpha",0,1);
         AnimatorSet set=new AnimatorSet();
-        set.play(oa).with(oa2).with(oa3).with(oa4).with(oa5);
+        set.play(oa).with(oa2).with(oa5).with(oa3).with(oa4);
         set.addListener(new Animator.AnimatorListener() {
 
             @Override
             public void onAnimationStart(Animator animation) {
+                indicator.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((PvFragment)fragments.get(position)).scaleChange(ImageView.ScaleType.FIT_CENTER);
+                    }
+                },DURATION_TIME/2);
+
             }
 
             @Override
@@ -261,6 +273,18 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
         set.start();
     }
 
+    /**
+     * 关闭动画时，重新改变viewpager位置
+     * 主要是为了修正 切换ScaleType时  闪动的问题
+     */
+    private void setHackyViewPagerPosition(){
+        FrameLayout.LayoutParams params= (FrameLayout.LayoutParams) hackyViewPager.getLayoutParams();
+        params.width= (int) overLayViewWidthClose;
+        params.height= (int) overLayViewHeightClose;
+        params.setMargins((int)overLayViewMarginLeftClose,(int) overLayViewMarginTopClose, 0, 0);
+        hackyViewPager.setLayoutParams(params);
+    }
+
 
     /**
      * 关闭动画
@@ -268,10 +292,11 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
     private void animClose(){
         if(isAnim)return;
         isAnim=true;
-        ObjectAnimator oa= ObjectAnimator.ofFloat(hackyViewPager,"scaleX",scaleX,1);
-        ObjectAnimator oa2= ObjectAnimator.ofFloat(hackyViewPager,"scaleY",scaleY,1);
-        ObjectAnimator oa3= ObjectAnimator.ofFloat(hackyViewPager,"translationX",translationX,transStartX);
-        ObjectAnimator oa4= ObjectAnimator.ofFloat(hackyViewPager,"translationY",translationY,transStartY);
+        WrapperView wrapperView=new WrapperView(hackyViewPager);
+        ObjectAnimator oa= ObjectAnimator.ofFloat(wrapperView,"mwidth",overLayViewWidthClose,overLayViewWidth);
+        ObjectAnimator oa2= ObjectAnimator.ofFloat(wrapperView,"mheight",overLayViewHeightClose,overLayViewHeight);
+        ObjectAnimator oa3= ObjectAnimator.ofFloat(hackyViewPager,"translationX",0,translationCloseX);
+        ObjectAnimator oa4= ObjectAnimator.ofFloat(hackyViewPager,"translationY",0,translationCloseY);
         ObjectAnimator oa5= ObjectAnimator.ofFloat(bg,"alpha",1,0);
         AnimatorSet set=new AnimatorSet();
         set.play(oa).with(oa2).with(oa5).with(oa3).with(oa4);
@@ -299,7 +324,6 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             }
         });
         set.setDuration(DURATION_TIME_CLOSE);
-        set.setInterpolator(new AccelerateInterpolator());
         set.start();
     }
 

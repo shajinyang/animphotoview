@@ -23,7 +23,7 @@ public class WrapperView {
         params.width= (int) mwidth;
         params.height= (int) mheight;
         imageView.setLayoutParams(params);
-        imageView.requestLayout();
+//        imageView.requestLayout();
     }
 
     public float getMheight() {
@@ -36,7 +36,7 @@ public class WrapperView {
         params.width= (int) mwidth;
         params.height= (int) mheight;
         imageView.setLayoutParams(params);
-        imageView.requestLayout();
+//        imageView.requestLayout();
     }
 
     public WrapperView(View imageView) {

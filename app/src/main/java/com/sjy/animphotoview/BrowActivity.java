@@ -1,6 +1,8 @@
 package com.sjy.animphotoview;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.sjy.animphotoview.base.BaseViewHolder;
 import com.sjy.animphotoview.base.CommonAdapter;
 import com.sjy.photoview.Gallery;
@@ -43,19 +47,22 @@ public class BrowActivity extends AppCompatActivity {
         gallBean.setBitmapWidth(1080);
         gallBean.setBitmapHeight(1440);
         gallBean.setImgPath(R.mipmap.ji);
-        gallBean.setThumbImgPath(R.mipmap.ji);
+        gallBean.setThumbImgPath(R.mipmap.test22);
         GallBean gallBean2=new GallBean();
-        gallBean2.setBitmapWidth(1080);
-        gallBean2.setBitmapHeight(1440);
-        gallBean2.setImgPath(R.mipmap.ji);
-        gallBean2.setThumbImgPath(R.mipmap.ji);
+        gallBean2.setBitmapWidth(500);
+        gallBean2.setBitmapHeight(312);
+        gallBean2.setImgPath(R.mipmap.test22);
+        gallBean2.setThumbImgPath(R.mipmap.test22);
         list.add(gallBean2);
         list.add(gallBean);
 
-        rv.setLayoutManager(new GridLayoutManager(this,4));
+        rv.setLayoutManager(new GridLayoutManager(this,3));
         rv.setAdapter(new CommonAdapter<GallBean>(this,R.layout.item_img,list) {
             @Override
             public void convert(BaseViewHolder holder, GallBean gallBean, final int position) {
+                Glide.with(mContext)
+                        .load(gallBean.getImgPath())
+                        .into((ImageView) holder.getView(R.id.s_img));
                 holder.setOnClickListener(R.id.s_img, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -66,10 +73,16 @@ public class BrowActivity extends AppCompatActivity {
                                 .loadImages(list)
                                 .setLoader(new IPhotoLoader() {
                                     @Override
-                                    public void loadImg(GallBean gallBean, ImageView targertView) {
-                                        Glide.with(BrowActivity.this)
-                                                .load(gallBean.getImgPath())
-                                                .into(targertView);
+                                    public void loadImg(GallBean gallBean, final ImageView targertView) {
+                                        Glide.with(mContext).asBitmap().load(gallBean.getImgPath()).into(new SimpleTarget<Bitmap>() {
+                                            @Override
+                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                                    targertView.setImageBitmap(resource);
+                                            }
+                                        });
+//                                        Glide.with(BrowActivity.this)
+//                                                .load(gallBean.getImgPath())
+//                                                .into(targertView);
                                     }
                                 })
                                 .setonPageChangeListener(new OnPageChangeListener() {

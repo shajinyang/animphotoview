@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<FrameLayout
     android:id="@+id/module_lib_bg"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -17,9 +17,9 @@
         android:layout_height="wrap_content"
         android:text="1/5"
         android:gravity="center"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:padding="8dp"
         android:background="#80000000"
         android:textColor="#fff"
         android:textSize="18dp"/>
-</RelativeLayout>
+</FrameLayout>

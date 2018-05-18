@@ -47,7 +47,6 @@ public class Gallery {
     //覆盖view的上边距
     private float overLayViewMarginTop=0;
 
-    private static Gallery gallery;
 
     private Gallery(){
 
@@ -103,6 +102,7 @@ public class Gallery {
         bundle.putFloat("overLayViewHeight",overLayViewHeight);
         bundle.putFloat("overLayViewMarginLeft",overLayViewMarginLeft);
         bundle.putFloat("overLayViewMarginTop",overLayViewMarginTop);
+        bundle.putSerializable("cusViewScaleType",((ImageView)cusView).getScaleType());
         bundle.putInt("position",currentPosition);
         intent.putExtras(bundle);
         mActivity.startActivity(intent);
@@ -135,20 +135,11 @@ public class Gallery {
         int[] sposition=new int[2];
         cusView.getLocationInWindow(sposition);
 
-        //获取当前的图像尺寸
-        int bitmapW=imgs.get(currentPosition).getBitmapWidth();
-        int bitmapH=imgs.get(currentPosition).getBitmapHeight();
-
         //计算覆盖物view的宽高及布局位置
-        if(bitmapH*1.0f/bitmapW>cusView.getHeight()*1.0f/cusView.getWidth()){
-            overLayViewWidth=cusView.getWidth();
-            overLayViewHeight=overLayViewWidth/bitmapW*bitmapH;
-        }else {
-            overLayViewHeight=cusView.getHeight();
-            overLayViewWidth=overLayViewHeight/bitmapH*bitmapW;
-        }
-        overLayViewMarginLeft=sposition[0]-(overLayViewWidth-cusView.getWidth())/2;
-        overLayViewMarginTop=sposition[1]-(overLayViewHeight-cusView.getHeight())/2;
+        overLayViewWidth=cusView.getWidth();
+        overLayViewHeight=cusView.getHeight();
+        overLayViewMarginLeft=sposition[0];
+        overLayViewMarginTop=sposition[1];
 
     }
 
