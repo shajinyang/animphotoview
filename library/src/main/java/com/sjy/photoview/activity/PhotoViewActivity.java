@@ -177,6 +177,7 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
         fragments=new ArrayList<>();
         hackyViewPager=new HackyViewPager(this);
         hackyViewPager.setId(R.id.hack_viewer_pager_sjy);
+        hackyViewPager.setPageMargin(20);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams((int) overLayViewWidth,(int) overLayViewHeight);
         params.setMargins((int)overLayViewMarginLeft,(int) overLayViewMarginTop, 0, 0);
         hackyViewPager.setLayoutParams(params);
