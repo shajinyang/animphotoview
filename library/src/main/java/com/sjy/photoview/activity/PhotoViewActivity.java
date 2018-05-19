@@ -134,6 +134,7 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
                             animOpen();
                         }
                     });
+
                 }
             });
 
@@ -177,7 +178,6 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
         fragments=new ArrayList<>();
         hackyViewPager=new HackyViewPager(this);
         hackyViewPager.setId(R.id.hack_viewer_pager_sjy);
-        hackyViewPager.setPageMargin(20);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams((int) overLayViewWidth,(int) overLayViewHeight);
         params.setMargins((int)overLayViewMarginLeft,(int) overLayViewMarginTop, 0, 0);
         hackyViewPager.setLayoutParams(params);
@@ -195,7 +195,7 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             fragments.add(pvFragment);
         }
         hackyViewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(),fragments));
-        hackyViewPager.setOffscreenPageLimit(fragments.size());
+        hackyViewPager.setOffscreenPageLimit(3);
         hackyViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {

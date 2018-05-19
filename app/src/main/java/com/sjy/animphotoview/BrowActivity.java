@@ -53,8 +53,20 @@ public class BrowActivity extends AppCompatActivity {
         gallBean2.setBitmapHeight(312);
         gallBean2.setImgPath(R.mipmap.test22);
         gallBean2.setThumbImgPath(R.mipmap.test22);
+        GallBean gallBean3=new GallBean();
+        gallBean3.setBitmapWidth(500);
+        gallBean3.setBitmapHeight(312);
+        gallBean3.setImgPath(R.mipmap.test22);
+        gallBean3.setThumbImgPath(R.mipmap.test22);
+        GallBean gallBean4=new GallBean();
+        gallBean4.setBitmapWidth(500);
+        gallBean4.setBitmapHeight(312);
+        gallBean4.setImgPath(R.mipmap.test22);
+        gallBean4.setThumbImgPath(R.mipmap.test22);
         list.add(gallBean2);
         list.add(gallBean);
+        list.add(gallBean3);
+        list.add(gallBean4);
 
         rv.setLayoutManager(new GridLayoutManager(this,3));
         rv.setAdapter(new CommonAdapter<GallBean>(this,R.layout.item_img,list) {
@@ -74,15 +86,15 @@ public class BrowActivity extends AppCompatActivity {
                                 .setLoader(new IPhotoLoader() {
                                     @Override
                                     public void loadImg(GallBean gallBean, final ImageView targertView) {
-                                        Glide.with(mContext).asBitmap().load(gallBean.getImgPath()).into(new SimpleTarget<Bitmap>() {
-                                            @Override
-                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                                    targertView.setImageBitmap(resource);
-                                            }
-                                        });
-//                                        Glide.with(BrowActivity.this)
-//                                                .load(gallBean.getImgPath())
-//                                                .into(targertView);
+//                                        Glide.with(mContext).asBitmap().load(gallBean.getImgPath()).into(new SimpleTarget<Bitmap>() {
+//                                            @Override
+//                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+//                                                    targertView.setImageBitmap(resource);
+//                                            }
+//                                        });
+                                        Glide.with(BrowActivity.this)
+                                                .load(gallBean.getImgPath())
+                                                .into(targertView);
                                     }
                                 })
                                 .setonPageChangeListener(new OnPageChangeListener() {

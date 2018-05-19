@@ -27,7 +27,7 @@
       在module的gradle里配置
       dependencies {
          ...
-      	 compile ('com.github.shajinyang:animphotoview:1.0.9'){
+      	 compile ('com.github.shajinyang:animphotoview:1.0.8'){
                      exclude group: "com.android.support"
              }
       }
@@ -47,18 +47,15 @@
                 .fromView(v)//动画开始的view，一般为imageview
                 .currentPostion(position)//当前位置
                 .loadImages(list)//图片集合
-                //自定义加载器
+                //自定义图片加载器
                 .setLoader(new IPhotoLoader() {
                     @Override
                     public void loadImg(GallBean gallBean, ImageView targertView) {
 
-                        //glide加载使用了bitmap加载方式，因为glide默认的加载方式切换ScaleType时会闪动，体验不好
-                         Glide.with(mContext).asBitmap().load(gallBean.getImgPath()).into(new SimpleTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                    targertView.setImageBitmap(resource);
-                            }
-                        });
+                        //glide加载 或者其他加载方式
+                        Glide.with(BrowActivity.this)
+                            .load(gallBean.getImgPath())
+                            .into(targertView);
 
                     }
                 })
