@@ -27,7 +27,7 @@
       在module的gradle里配置
       dependencies {
          ...
-      	 compile ('com.github.shajinyang:animphotoview:1.1.0'){
+      	 compile ('com.github.shajinyang:animphotoview:1.1.1'){
                      exclude group: "com.android.support"
              }
       }
@@ -45,6 +45,7 @@
     @Override
     public void onClick(View v) {
         Gallery.getInstance()
+                .isAnima(true)
                 .with(BrowActivity.this)//必须传递activity
                 .fromView(v)//动画开始的view，一般为imageview
                 .currentPostion(position)//当前位置
@@ -79,7 +80,7 @@
  关闭动画效果的调用方式
 
     Gallery.getInstance()
-            .closeAnim()
+            .isAnima(false)
             .with(BrowActivity.this)
             .loadImages(list)
             .currentPostion(position)

@@ -74,8 +74,8 @@ public class Gallery {
         return this;
     }
 
-    public Gallery closeAnim(){
-        this.isAnim=false;
+    public Gallery isAnima(boolean isAnim){
+        this.isAnim=isAnim;
         return this;
     }
 

@@ -242,7 +242,6 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             PvFragment pvFragment=new PvFragment(new OnPhotoViewClickListener() {
                 @Override
                 public void onClick() {
-                    ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
                     finish();
                 }
             }, iPhotoLoader, bean);
@@ -274,9 +273,13 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
 
     @Override
     public void onBackPressed() {
-        ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
-        setHackyViewPagerPosition();
-        animClose();
+        if(animStyle) {
+            ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
+            setHackyViewPagerPosition();
+            animClose();
+        }else {
+            finish();
+        }
     }
 
 

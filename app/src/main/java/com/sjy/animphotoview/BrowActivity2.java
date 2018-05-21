@@ -1,22 +1,16 @@
 package com.sjy.animphotoview;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.sjy.animphotoview.base.BaseViewHolder;
 import com.sjy.animphotoview.base.CommonAdapter;
 import com.sjy.photoview.Gallery;
@@ -30,7 +24,7 @@ import java.util.ArrayList;
  * Created by sjy on 2018/5/17.
  */
 
-public class BrowActivity extends AppCompatActivity {
+public class BrowActivity2 extends AppCompatActivity {
     RecyclerView rv;
     ArrayList<GallBean> list;
     @Override
@@ -79,24 +73,16 @@ public class BrowActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Gallery.getInstance()
-                                .isAnima(true)
-                                .with(BrowActivity.this)
-                                .fromView(v)
-                                .currentPostion(position)
+                                .isAnima(false)
+                                .with(BrowActivity2.this)
                                 .loadImages(list)
+                                .currentPostion(position)
                                 .setLoader(new IPhotoLoader() {
                                     @Override
                                     public void loadImg(GallBean gallBean, final ImageView targertView) {
-                                        Glide.with(BrowActivity.this)
+                                        Glide.with(BrowActivity2.this)
                                                 .load(gallBean.getImgPath())
                                                 .into(targertView);
-                                    }
-                                })
-                                .setonPageChangeListener(new OnPageChangeListener() {
-                                    @Override
-                                    public void onPageChange(int position) {
-                                        Gallery.getInstance()
-                                                .onBindChange(rv.getChildAt(position),position);
                                     }
                                 })
                                 .start();
