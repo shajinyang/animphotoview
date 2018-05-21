@@ -27,7 +27,7 @@
       在module的gradle里配置
       dependencies {
          ...
-      	 compile ('com.github.shajinyang:animphotoview:1.0.8'){
+      	 compile ('com.github.shajinyang:animphotoview:1.1.0'){
                      exclude group: "com.android.support"
              }
       }
@@ -35,6 +35,8 @@
 
 
 #### 代码示例：recycleview的item点击
+
+
 
      AnimPhotoView pv;
      ArrayList<GallBean> list=new ArrayList<>();
@@ -72,6 +74,24 @@
 
     ...
 
+
+
+ 关闭动画效果的调用方式
+
+    Gallery.getInstance()
+            .closeAnim()
+            .with(BrowActivity.this)
+            .loadImages(list)
+            .currentPostion(position)
+            .setLoader(new IPhotoLoader() {
+                @Override
+                public void loadImg(GallBean gallBean, final ImageView targertView) {
+                    Glide.with(BrowActivity.this)
+                            .load(gallBean.getImgPath())
+                            .into(targertView);
+                }
+            })
+            .start();
 
 
 

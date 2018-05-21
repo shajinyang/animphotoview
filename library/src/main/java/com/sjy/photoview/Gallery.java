@@ -47,6 +47,9 @@ public class Gallery {
     //覆盖view的上边距
     private float overLayViewMarginTop=0;
 
+    //切换动画效果
+    private boolean isAnim=true;
+
 
     private Gallery(){
 
@@ -68,6 +71,11 @@ public class Gallery {
 
     public Gallery fromView(View cusView){
         this.cusView=cusView;
+        return this;
+    }
+
+    public Gallery closeAnim(){
+        this.isAnim=false;
         return this;
     }
 
@@ -102,8 +110,11 @@ public class Gallery {
         bundle.putFloat("overLayViewHeight",overLayViewHeight);
         bundle.putFloat("overLayViewMarginLeft",overLayViewMarginLeft);
         bundle.putFloat("overLayViewMarginTop",overLayViewMarginTop);
-        bundle.putSerializable("cusViewScaleType",((ImageView)cusView).getScaleType());
+        if(cusView!=null) {
+            bundle.putSerializable("cusViewScaleType", ((ImageView) cusView).getScaleType());
+        }
         bundle.putInt("position",currentPosition);
+        bundle.putBoolean("anim",isAnim);
         intent.putExtras(bundle);
         mActivity.startActivity(intent);
         mActivity.overridePendingTransition(0,0);

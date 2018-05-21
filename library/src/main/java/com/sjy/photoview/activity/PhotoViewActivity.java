@@ -39,6 +39,7 @@ import java.util.List;
 
 
 /**
+ * 带动画的activity
  * Created by sjy on 2018/5/17.
  */
 
@@ -65,6 +66,10 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
     private float overLayViewHeightClose=0;
     private float overLayViewMarginLeftClose=0;
     private float overLayViewMarginTopClose=0;
+
+
+    //是否打开动画切换效果
+    private boolean animStyle=true;
 
     //动画平移距离
     private float translationX=0;
@@ -118,6 +123,7 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             overLayViewHeight=getIntent().getExtras().getFloat("overLayViewHeight");
             overLayViewMarginLeft=getIntent().getExtras().getFloat("overLayViewMarginLeft");
             overLayViewMarginTop=getIntent().getExtras().getFloat("overLayViewMarginTop");
+            animStyle=getIntent().getExtras().getBoolean("anim");
             position=getIntent().getExtras().getInt("position");
             imgs= (ArrayList<GallBean>) getIntent().getExtras().getSerializable("imgs");
             cusViewScaleType= (ImageView.ScaleType) getIntent().getExtras().getSerializable("cusViewScaleType");
@@ -126,14 +132,18 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
             relativeLayout.post(new Runnable() {
                 @Override
                 public void run() {
-                    initOverLayView();
-                    hackyViewPager.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            calculateDistance();
-                            animOpen();
-                        }
-                    });
+                    if(animStyle) {
+                        initOverLayView();
+                        hackyViewPager.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                calculateDistance();
+                                animOpen();
+                            }
+                        });
+                    }else {
+                        initOverLayViewWithOutAnim();
+                    }
 
                 }
             });
@@ -207,6 +217,49 @@ public class PhotoViewActivity extends AppCompatActivity implements OnCalDataCha
                 position=p;
                 indicator.setText((position+1)+" / "+imgs.size());
                 onPageChangeListener.onPageChange(p);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+        hackyViewPager.setCurrentItem(position);
+    }
+
+    /**
+     * 初始化覆盖物(不带动画效果)
+     */
+    private void  initOverLayViewWithOutAnim(){
+        bg.setAlpha(1f);
+        fragments=new ArrayList<>();
+        hackyViewPager=new HackyViewPager(this);
+        hackyViewPager.setId(R.id.hack_viewer_pager_sjy);
+        hackyViewPager.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        relativeLayout.addView(hackyViewPager,relativeLayout.getChildCount()-1);
+        for (GallBean bean:imgs
+                ) {
+            PvFragment pvFragment=new PvFragment(new OnPhotoViewClickListener() {
+                @Override
+                public void onClick() {
+                    ((PvFragment)fragments.get(position)).scaleChange(cusViewScaleType);
+                    finish();
+                }
+            }, iPhotoLoader, bean);
+            fragments.add(pvFragment);
+        }
+        hackyViewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(),fragments));
+        hackyViewPager.setOffscreenPageLimit(3);
+        hackyViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int p) {
+                position=p;
+                indicator.setText((position+1)+" / "+imgs.size());
             }
 
             @Override

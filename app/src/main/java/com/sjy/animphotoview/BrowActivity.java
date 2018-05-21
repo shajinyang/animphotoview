@@ -86,12 +86,6 @@ public class BrowActivity extends AppCompatActivity {
                                 .setLoader(new IPhotoLoader() {
                                     @Override
                                     public void loadImg(GallBean gallBean, final ImageView targertView) {
-//                                        Glide.with(mContext).asBitmap().load(gallBean.getImgPath()).into(new SimpleTarget<Bitmap>() {
-//                                            @Override
-//                                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-//                                                    targertView.setImageBitmap(resource);
-//                                            }
-//                                        });
                                         Glide.with(BrowActivity.this)
                                                 .load(gallBean.getImgPath())
                                                 .into(targertView);
@@ -105,6 +99,21 @@ public class BrowActivity extends AppCompatActivity {
                                     }
                                 })
                                 .start();
+//                        Gallery.getInstance()
+//                                .closeAnim()
+//                                .with(BrowActivity.this)
+//                                .loadImages(list)
+//                                .currentPostion(position)
+//                                .setLoader(new IPhotoLoader() {
+//                                    @Override
+//                                    public void loadImg(GallBean gallBean, final ImageView targertView) {
+//                                        Glide.with(BrowActivity.this)
+//                                                .load(gallBean.getImgPath())
+//                                                .into(targertView);
+//                                    }
+//                                })
+//                                .start();
+
                     }
                 });
             }
